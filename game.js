@@ -12,6 +12,9 @@ const player = {
     isDrawing: false
 };
 
+//list for storing the point of the player path 
+let path = [];
+
 // Keyboard key state tracker
 const keys = {
     ArrowUp: false,
@@ -71,14 +74,31 @@ function update() {
             player.isDrawing = true;
             player.color = "#ff0000";
         }
+
+        //start point of the path and center of the player
+        path.push({
+            x: player.x + player.size / 2,
+            y: player.y + player.size/2 
+        });
+
     } else {
         player.x = nextX;
         player.y = nextY;
+
+        if (player.isDrawing) {
+            // Add the current position to the path if drawing
+            path.push({
+                x: player.x + player.size / 2,
+                y: player.y + player.size/2
+            });
+        }
 
         // Exit drawing mode when reaching any edge
         if (isOnEdge(player.x, player.y)) {
             player.isDrawing = false;
             player.color = "#34ef05";
+
+            path = []; //clear the path when the player return the edge 
         }
     }
 }
@@ -87,6 +107,19 @@ function update() {
 function draw() {
     // Clear screen
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+
+    if(path.length > 1){
+        ctx.beginPath();
+        ctx.strokeStyle = "#ff0000";
+        ctx.lineWidth = 3;
+        ctx.moveTo(path[0].x,path[0].y);
+        for (let i = 1; i < path.length; i++) {
+            ctx.lineTo(path[i].x, path[i].y);
+        }
+        ctx.stroke();
+    }
+
 
     // Draw player
     ctx.fillStyle = player.color;
