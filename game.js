@@ -12,6 +12,16 @@ const player = {
     isDrawing: false
 };
 
+// Enemy object storing position, dimensions, speed, and drawing state
+const enemy = {
+    x: canvas.width / 2, //center of the screen
+    y: canvas.height / 2,
+    size: 20,
+    speedX: 3,
+    speedY: 2,
+    color: "#ff00ff"
+};
+
 //list for storing the point of the player path 
 let path = [];
 
@@ -45,8 +55,60 @@ function isOnEdge(x, y) {
     return x === 0 || y === 0 || x === maxX || y === maxY;
 }
 
+// If enemy collides with the player, reset the player to the starting position and clear the path
+function resetPlayer(){
+    player.x = 0;
+    player.y = 0;
+    player.isDrawing = false;
+    player.color = "#34ef05";
+    path = [];
+}
+
+// Check for collision between the player and the enemy 
+function checkCollision(){
+    // If enemy collides directly with the player
+    if (
+        enemy.x < player.x + player.size &&
+        enemy.x + enemy.size > player.x &&
+        enemy.y < player.y + player.size &&
+        enemy.y + enemy.size > player.y
+    ) {
+        resetPlayer();
+        return;
+    }
+
+    // If enemy collides with the player's path while the player is drawing
+    if (player.isDrawing) {
+        for (let point of path) {
+            if (
+                point.x >= enemy.x &&
+                point.x <= enemy.x + enemy.size &&
+                point.y >= enemy.y &&
+                point.y <= enemy.y + enemy.size
+            ) {
+                resetPlayer();
+                break;
+            }
+        }
+    }
+}
+
+// Updates enemy movement and 
+function updateEnemy(){
+    enemy.x += enemy.speedX;
+    enemy.y += enemy.speedY;
+
+    // If the enemy hits the canvas boundaries , reverse its direction
+    if(enemy.x <= 0 || enemy.x + enemy.size >= canvas.width){
+        enemy.speedX *= -1;
+    }
+
+    if(enemy.y <= 0 || enemy.y + enemy.size >= canvas.height){
+        enemy.speedY *= -1;
+    }
+}
 // Updates player movement and handles transition between safe boundary and drawing mode
-function update() {
+function updatePlayer() {
     let nextX = player.x;
     let nextY = player.y;
 
@@ -78,7 +140,7 @@ function update() {
         //start point of the path and center of the player
         path.push({
             x: player.x + player.size / 2,
-            y: player.y + player.size/2 
+            y: player.y + player.size/ 2 
         });
 
     } else {
@@ -89,7 +151,7 @@ function update() {
             // Add the current position to the path if drawing
             path.push({
                 x: player.x + player.size / 2,
-                y: player.y + player.size/2
+                y: player.y + player.size / 2
             });
         }
 
@@ -101,6 +163,12 @@ function update() {
             path = []; //clear the path when the player return the edge 
         }
     }
+}
+
+function update() {
+    updatePlayer();
+    updateEnemy();
+    checkCollision();
 }
 
 // Clears the canvas and renders the player
@@ -120,10 +188,13 @@ function draw() {
         ctx.stroke();
     }
 
-
     // Draw player
     ctx.fillStyle = player.color;
     ctx.fillRect(player.x, player.y, player.size, player.size);
+
+    // Draw enemy
+    ctx.fillStyle = enemy.color;
+    ctx.fillRect(enemy.x, enemy.y, enemy.size, enemy.size);
 }
 
 // Main game loop running at screen refresh rate
